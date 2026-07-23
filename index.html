@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StayFinder — Accommodation Search</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f4f6f9;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a73e8;
+      color: #fff;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 { font-size: 1.5rem; font-weight: 700; }
+    header span { font-size: 0.95rem; opacity: 0.85; }
+
+    .layout {
+      display: flex;
+      gap: 24px;
+      max-width: 1200px;
+      margin: 28px auto;
+      padding: 0 20px;
+      align-items: flex-start;
+    }
+
+    /* ── Filter Panel ── */
+    .filters {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      width: 260px;
+      min-width: 220px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      position: sticky;
+      top: 20px;
+    }
+    .filters h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #1a73e8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .filter-group { margin-bottom: 22px; }
+    .filter-group label.group-label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .checkbox-item input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: #1a73e8;
+    }
+
+    .range-wrap { padding: 4px 0; }
+    .range-wrap input[type="range"] {
+      width: 100%;
+      accent-color: #1a73e8;
+      cursor: pointer;
+    }
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: #888;
+      margin-top: 4px;
+    }
+    .range-value {
+      display: inline-block;
+      background: #1a73e8;
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 6px;
+    }
+
+    .btn-reset {
+      width: 100%;
+      padding: 10px;
+      background: #f1f3f4;
+      color: #444;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 4px;
+    }
+    .btn-reset:hover { background: #e2e5ea; }
+
+    /* ── Results ── */
+    .results { flex: 1; }
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .results-header h2 { font-size: 1.1rem; font-weight: 700; }
+    #result-count { font-size: 0.9rem; color: #666; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    }
+    .card-img {
+      height: 150px;
+      background: linear-gradient(135deg, #c8e0ff, #a0c4ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+    }
+    .card-body { padding: 16px; }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .card-type {
+      font-size: 0.78rem;
+      color: #fff;
+      background: #1a73e8;
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+    .card-amenities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .tag {
+      font-size: 0.75rem;
+      background: #e8f0fe;
+      color: #1a73e8;
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 10px;
+    }
+    .price { font-weight: 700; font-size: 1rem; color: #1a73e8; }
+    .price span { font-size: 0.75rem; font-weight: 400; color: #888; }
+    .score {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .score-badge {
+      background: #34a853;
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: #888;
+      font-size: 1rem;
+      display: none;
+    }
+    .no-results .icon { font-size: 3rem; margin-bottom: 12px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      .layout { flex-direction: column; }
+      .filters { width: 100%; position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:1.6rem">🏨</span>
+  <div>
+    <h1>StayFinder</h1>
+    <span>Find your perfect accommodation</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- Filter Panel -->
+  <aside class="filters" aria-label="Search filters">
+    <h2>Filters</h2>
+
+    <div class="filter-group">
+      <label class="group-label">Amenities</label>
+      <label class="checkbox-item">
+        <input type="checkbox" id="wifi" value="wifi" onchange="applyFilters()" />
+        Free Wi-Fi
+      </label>
+      <label class="checkbox-item">
+        <input type="checkbox" id="breakfast" value="breakfast" onchange="applyFilters()" />
+        Breakfast Included
+      </label>
+    </div>
+
+    <div class="filter-group">
+      <label class="group-label">Property Type</label>
+      <label class="checkbox-item">
+        <input type="checkbox" id="hotel" value="hotel" onchange="applyFilters()" />
+        Hotel
+      </label>
+      <label class="checkbox-item">
+        <input type="checkbox" id="villa" value="villa" onchange="applyFilters()" />
+        Villa
+      </label>
+    </div>
+
+    <div class="filter-group">
+      <label class="group-label" for="score-range">Min Review Score</label>
+      <div class="range-wrap">
+        <input type="range" id="score-range" min="1" max="10" value="1"
+               oninput="updateScoreLabel(this.value); scheduleFilter()"
+               aria-label="Minimum review score"
+               aria-valuenow="1" aria-valuemin="1" aria-valuemax="10" aria-valuetext="Any (≥ 1)" />
+        <div class="range-labels"><span>1</span><span>10</span></div>
+        <span class="range-value" id="score-label">Any (≥ 1)</span>
+      </div>
+    </div>
+
+    <button class="btn-reset" onclick="resetFilters()">Reset Filters</button>
+  </aside>
+
+  <!-- Results -->
+  <main class="results" aria-live="polite">
+    <div class="results-header">
+      <h2>Available Properties</h2>
+      <span id="result-count"></span>
+    </div>
+    <div class="cards" id="cards-container"></div>
+    <div class="no-results" id="no-results">
+      <div class="icon">🔍</div>
+      <p>No properties match your current filters.</p>
+      <p style="margin-top:8px;font-size:0.85rem;">Try removing some filters to see more results.</p>
+    </div>
+  </main>
+
+</div>
+
+<script>
+  const properties = [
+    { id: 1, name: "The Grand Horizon Hotel", type: "hotel", amenities: ["wifi", "breakfast"], score: 9.2, price: 180, emoji: "🏨" },
+    { id: 2, name: "Sunset Villa Retreat",    type: "villa", amenities: ["wifi", "breakfast"], score: 9.5, price: 320, emoji: "🏡" },
+    { id: 3, name: "City Centre Inn",         type: "hotel", amenities: ["wifi"],              score: 7.8, price: 95,  emoji: "🏨" },
+    { id: 4, name: "Palm Grove Villa",         type: "villa", amenities: ["breakfast"],         score: 8.4, price: 275, emoji: "🌴" },
+    { id: 5, name: "Blue Bay Hotel",           type: "hotel", amenities: ["wifi", "breakfast"], score: 8.9, price: 145, emoji: "🏨" },
+    { id: 6, name: "Mountain View Lodge",      type: "hotel", amenities: [],                    score: 6.5, price: 75,  emoji: "⛰️" },
+    { id: 7, name: "Coastal Dream Villa",      type: "villa", amenities: ["wifi"],              score: 9.0, price: 410, emoji: "🌊" },
+    { id: 8, name: "Downtown Express Hotel",   type: "hotel", amenities: ["wifi"],              score: 7.2, price: 110, emoji: "🏙️" },
+    { id: 9, name: "Garden Escape Villa",      type: "villa", amenities: ["wifi", "breakfast"], score: 8.1, price: 230, emoji: "🌿" },
+    { id: 10,"name": "The Heritage Hotel",     type: "hotel", amenities: ["breakfast"],         score: 8.6, price: 160, emoji: "🏛️" },
+  ];
+
+  const amenityLabels = { wifi: "Free Wi-Fi", breakfast: "Breakfast Included" };
+
+  // Pure function — no DOM reads. Called directly by tests.html (DD-04).
+  function filterProperties(props, state) {
+    const { amenities, types, minScore } = state;
+    return props.filter(p => {
+      const safeAmenities = p.amenities || [];       // DD-02 defensive default
+      const safeType      = p.type      || "";
+      const safeScore     = p.score     || 0;
+      const amenityMatch  = amenities.length === 0 || amenities.some(a => safeAmenities.includes(a));
+      const typeMatch     = types.length === 0     || types.includes(safeType);
+      const scoreMatch    = safeScore >= minScore;
+      return amenityMatch && typeMatch && scoreMatch;
+    });
+  }
+
+  function getActiveAmenities() {
+    return ["wifi", "breakfast"].filter(a => document.getElementById(a).checked);
+  }
+
+  function getActiveTypes() {
+    return ["hotel", "villa"].filter(t => document.getElementById(t).checked);
+  }
+
+  function getMinScore() {
+    return parseFloat(document.getElementById("score-range").value);
+  }
+
+  // rAF throttle — batches rapid slider drags to one render per frame (DD-05)
+  let rafPending = false;
+  function scheduleFilter() {
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(() => {
+      rafPending = false;
+      applyFilters();
+    });
+  }
+
+  function applyFilters() {
+    const state = {
+      amenities: getActiveAmenities(),
+      types:     getActiveTypes(),
+      minScore:  getMinScore()
+    };
+    renderCards(filterProperties(properties, state));
+  }
+
+  function renderCards(list) {
+    const container  = document.getElementById("cards-container");
+    const noResults  = document.getElementById("no-results");
+    const countLabel = document.getElementById("result-count");
+
+    countLabel.textContent = `Showing ${list.length} of ${properties.length} properties`;
+
+    if (list.length === 0) {
+      container.innerHTML = "";
+      noResults.style.display = "block";
+      return;
+    }
+
+    noResults.style.display = "none";
+    container.innerHTML = list.map(p => `
+      <article class="card" aria-label="${p.name}">
+        <div class="card-img">${p.emoji}</div>
+        <div class="card-body">
+          <div class="card-title">${p.name}</div>
+          <div class="card-type">${p.type.charAt(0).toUpperCase() + p.type.slice(1)}</div>
+          <div class="card-amenities">
+            ${p.amenities.length
+              ? p.amenities.map(a => `<span class="tag">${amenityLabels[a]}</span>`).join("")
+              : '<span class="tag" style="background:#f1f3f4;color:#888;">No amenities listed</span>'}
+          </div>
+          <div class="card-footer">
+            <div class="price">$${p.price}<span>/night</span></div>
+            <div class="score"><span class="score-badge">★ ${p.score}</span></div>
+          </div>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  function updateScoreLabel(val) {
+    const text = val == 1 ? "Any (≥ 1)" : `≥ ${parseFloat(val).toFixed(1)}`;
+    document.getElementById("score-label").textContent = text;
+    const slider = document.getElementById("score-range");
+    slider.setAttribute("aria-valuenow",  val);
+    slider.setAttribute("aria-valuetext", text);
+  }
+
+  function resetFilters() {
+    ["wifi", "breakfast", "hotel", "villa"].forEach(id => {
+      document.getElementById(id).checked = false;
+    });
+    const range = document.getElementById("score-range");
+    range.value = 1;
+    updateScoreLabel(1);
+    applyFilters();
+  }
+
+  // Initial render
+  applyFilters();
+</script>
+
+</body>
+</html>
