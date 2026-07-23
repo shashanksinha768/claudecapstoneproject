@@ -3,7 +3,7 @@
  * Tests the live UI in a headless Chromium browser.
  * Run: node verify-browser.js
  */
-const { chromium } = require('C:\\Users\\SHASHA~1\\AppData\\Local\\Temp\\stayfinder-verify\\node_modules\\playwright');
+const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 

@@ -1,0 +1,14 @@
+{
+  "name": "stayfinder",
+  "version": "1.0.0",
+  "description": "StayFinder — Advanced Search Filters (Agentic SDLC capstone)",
+  "private": true,
+  "scripts": {
+    "verify": "node verify.js",
+    "verify:browser": "node verify-browser.js",
+    "verify:all": "node verify.js && node verify-browser.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1"
+  }
+}
