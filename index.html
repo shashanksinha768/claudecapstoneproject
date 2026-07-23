@@ -355,6 +355,8 @@
     renderCards(filterProperties(properties, state));
   }
 
+  function escapeAttr(s) { return (s || "").replace(/"/g, "&quot;"); }
+
   function renderCards(list) {
     const container  = document.getElementById("cards-container");
     const noResults  = document.getElementById("no-results");
@@ -369,15 +371,19 @@
     }
 
     noResults.style.display = "none";
-    container.innerHTML = list.map(p => `
-      <article class="card" aria-label="${p.name}">
+    container.innerHTML = list.map(p => {
+      const safeType      = p.type      || "";
+      const safeAmenities = p.amenities || [];
+      const typeLabel     = safeType ? safeType.charAt(0).toUpperCase() + safeType.slice(1) : "Unknown";
+      return `
+      <article class="card" aria-label="${escapeAttr(p.name)}">
         <div class="card-img">${p.emoji}</div>
         <div class="card-body">
           <div class="card-title">${p.name}</div>
-          <div class="card-type">${p.type.charAt(0).toUpperCase() + p.type.slice(1)}</div>
+          <div class="card-type">${typeLabel}</div>
           <div class="card-amenities">
-            ${p.amenities.length
-              ? p.amenities.map(a => `<span class="tag">${amenityLabels[a]}</span>`).join("")
+            ${safeAmenities.length
+              ? safeAmenities.map(a => `<span class="tag">${amenityLabels[a]}</span>`).join("")
               : '<span class="tag" style="background:#f1f3f4;color:#888;">No amenities listed</span>'}
           </div>
           <div class="card-footer">
@@ -386,7 +392,8 @@
           </div>
         </div>
       </article>
-    `).join("");
+    `;
+    }).join("");
   }
 
   function updateScoreLabel(val) {

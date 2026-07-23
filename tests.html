@@ -32,6 +32,7 @@
 
 <script>
   // ── Pure function under test (copied from index.html — DD-04) ──────────────
+  // SYNC NOTE: if filterProperties logic changes in index.html, update this copy too.
   function filterProperties(props, state) {
     const { amenities, types, minScore } = state;
     return props.filter(p => {
@@ -157,8 +158,8 @@
     // T10 — No results (FR-7 / AC-7)
     assert(
       "Impossible filter combo → 0 results",
-      filterProperties(properties, { amenities: ["breakfast"], types: ["villa"], minScore: 9.5 }).length === 0,
-      "No villa has breakfast AND score ≥ 9.5"
+      filterProperties(properties, { amenities: ["breakfast"], types: ["villa"], minScore: 9.6 }).length === 0,
+      "Sunset Villa Retreat (id=2) has score=9.5 which is < 9.6; no villa+breakfast clears this bar"
     ),
 
     // T11 — Defensive defaults: missing amenities field (DD-02)
@@ -181,6 +182,17 @@
         return r.length === 0;
       })(),
       "score=undefined treated as 0 → filtered out when minScore=5"
+    ),
+
+    // T13 — Malformed record passes no-filter state — covers CR-5 gap (DD-02 + short-circuit path)
+    assert(
+      "Malformed record with no amenities/type passes all-off filter → returned without crash",
+      (() => {
+        const malformed = [{ id: 99, name: "Bad Hotel", score: 8.0, price: 100 }];
+        const r = filterProperties(malformed, noFilter);
+        return r.length === 1 && r[0].id === 99;
+      })(),
+      "amenities+type filters off → short-circuits to true; malformed record reaches caller (renderCards must guard too)"
     ),
 
   ];
