@@ -26,7 +26,7 @@ by Claude (Agents, Skills, Hooks, Prompts, Instructions).
 | 5 | `index.html` implementation + pending fixes | ✅ Done | `feature/advanced-search-filters` |
 | 6 | Code review via `/code-review` skill | ✅ Done | `feature/advanced-search-filters` |
 | 7 | Verification via `/verify` skill + `tests.html` | ✅ Done | `feature/advanced-search-filters` |
-| 8 | PR via `gh` CLI | ⏳ Pending | `feature/advanced-search-filters` → `master` |
+| 8 | PR via `gh` CLI | ✅ Done | `feature/advanced-search-filters` → `master` |
 
 ---
 
