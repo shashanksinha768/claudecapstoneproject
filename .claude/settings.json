@@ -11,5 +11,15 @@
         ]
       }
     ]
+  },
+  "mcpServers": {
+    "confluence": {
+      "command": "node",
+      "args": ["mcp-servers/confluence-mcp-server.mjs"],
+      "env": {
+        "CONFLUENCE_EMAIL": "",
+        "CONFLUENCE_API_TOKEN": ""
+      }
+    }
   }
 }
