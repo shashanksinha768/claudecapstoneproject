@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"C:\\Users\\Shashank_Sinha\\Downloads\\claudeCapstoneProject\" && node verify.js 2>&1 | grep -E 'RESULT:|❌' | head -5"
+          }
+        ]
+      }
+    ]
+  },
+  "mcpServers": {
+    "confluence": {
+      "command": "node",
+      "args": ["mcp-servers/confluence-mcp-server.mjs"],
+      "env": {
+        "CONFLUENCE_EMAIL": "",
+        "CONFLUENCE_API_TOKEN": ""
+      }
+    }
+  }
+}

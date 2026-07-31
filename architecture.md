@@ -83,6 +83,11 @@ This choice satisfies:
 - Render Reset Filters button
 - Fire `applyFilters()` on every user interaction (`onchange`, `oninput`)
 
+**Accessibility (WCAG 2.1 AA — NFR-3):**
+- Score slider must expose: `aria-valuenow`, `aria-valuemin`, `aria-valuemax`, `aria-valuetext`
+- Results `<main>` region uses `aria-live="polite"` so screen readers announce count updates
+- All checkboxes and the slider must have visible, associated `<label>` elements
+
 ### 4.2 Filter Engine (Business Logic Layer)
 **File location:** `<script>` block — `applyFilters()` function
 **Responsibilities:**
@@ -100,6 +105,13 @@ for each property p:
   scoreMatch   = p.score >= minScore
   include p    = amenityMatch AND typeMatch AND scoreMatch
 ```
+
+**Defensive Defaults (DD-02):** Fields may be missing in malformed records. Filter Engine applies:
+- `p.amenities` → treat as `[]` if falsy
+- `p.score` → treat as `0` if falsy
+- `p.type` → treat as `""` if falsy
+
+**DOM Coupling Trade-off (DD-04):** Utility functions read filter state directly from DOM elements. This is an accepted trade-off for a single-file app. Unit tests inject a state object directly into filter logic to bypass DOM reads.
 
 ### 4.3 Data Store (In-Memory)
 **File location:** `<script>` block — `properties[]` constant
@@ -131,6 +143,13 @@ for each property p:
 ## 5. Data Flow Diagram
 
 ```
+Page Load
+      │
+      ▼
+applyFilters() called on DOMContentLoaded → renderCards(all 10 properties)
+
+─────────────────────────────────────────
+
 User Interaction
       │
       ▼
@@ -164,8 +183,13 @@ User sees updated results (target: < 300ms)
 ```
 claudeCapstoneProject/
 ├── index.html          # Entire application (HTML + CSS + JS in one file)
+├── tests.html          # In-browser unit test runner (no npm required)
 ├── requirements.md     # Functional & non-functional requirements
-└── architecture.md     # This document
+├── architecture.md     # This document
+├── design-review.md    # Design review findings and decisions
+├── impl-plan.md        # Implementation task plan
+├── README.md           # How to run the app
+└── .gitignore          # Excludes OS artefacts (DS_Store, Thumbs.db)
 ```
 
 ---
@@ -176,7 +200,7 @@ claudeCapstoneProject/
 |----------|-----------|
 | Single HTML file | Zero setup; satisfies NFR-4; easy to share and open |
 | No DOM framework (React/Vue) | Overkill for 10 records; avoids CDN dependency |
-| In-memory filtering (no debounce) | Dataset is small (10 items); 300ms NFR easily met without debounce |
+| Score slider uses `requestAnimationFrame` throttle | `oninput` fires on every pixel of drag; rAF batches renders to ~16ms intervals, eliminating visual flicker without perceptible delay (DD-05) |
 | OR within / AND across categories | Matches FR-4; most intuitive UX for multi-select filters |
 | Read-only data array | Prevents accidental mutation bugs; filter state lives only in the DOM controls |
 | CSS Grid for cards | Auto-fills columns responsively without media query breakpoints on the card grid |
@@ -189,3 +213,25 @@ claudeCapstoneProject/
 - **No sorting** — out of scope per requirements.
 - **Mock data only** — swapping in a real API would require architectural changes (async fetch, loading state).
 - **Single file** — as the app grows, splitting into separate CSS/JS files would improve maintainability.
+- **innerHTML usage (DD-01)** — `renderCards()` uses `innerHTML` with template literals. This is safe **only** because the data source is a hardcoded JS constant. If data ever comes from user input or an external API, all dynamic values must be set via `textContent` or `setAttribute` to prevent XSS.
+
+---
+
+## 9. Testing Approach
+
+**Runner:** `tests.html` — plain HTML file with inline JS assertions, opened directly in a browser. No npm, no test framework, consistent with NFR-4.
+
+**Coverage targets:**
+
+| Test Case | Category |
+|-----------|----------|
+| No filters selected → all 10 properties shown | Happy path |
+| Amenity = Wi-Fi only → correct subset | FR-1 |
+| Type = Hotel only → correct subset | FR-2 |
+| Min score = 9 → only high-rated properties | FR-3 |
+| Amenity + Type + Score combined → correct intersection | FR-4 |
+| Reset → all 10 properties restored | FR-5 |
+| All filters set to impossible combination → 0 results | FR-7 (edge case) |
+| Property with missing `amenities` field → no crash | GAP-01 / DD-02 |
+
+**Unit test strategy (DD-04):** Filter logic is extracted into a pure function `filterProperties(properties, state)` that accepts a plain state object `{ amenities, types, minScore }`. Tests call this function directly without touching the DOM.

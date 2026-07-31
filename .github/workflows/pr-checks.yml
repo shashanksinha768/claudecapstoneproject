@@ -1,0 +1,44 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [feature/**]
+
+jobs:
+  # ── Job 1: Headless logic suite (no browser needed, fast) ──────────────────
+  verify-logic:
+    name: Logic & Document Suite (verify.js)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run verify.js (55 tests — filter logic, ACs, defensive defaults, docs)
+        run: node verify.js
+
+  # ── Job 2: Headless browser suite (Playwright Chromium) ────────────────────
+  verify-browser:
+    name: Browser UI Suite (verify-browser.js)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: npm install playwright
+
+      - name: Install Chromium browser binary
+        run: npx playwright install chromium --with-deps
+
+      - name: Run verify-browser.js (38 tests — live UI, ARIA, mobile 375px)
+        run: node verify-browser.js
